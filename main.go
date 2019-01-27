@@ -18,6 +18,7 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+// Read this to understand how to use the Google Sheets API https://developers.google.com/sheets/api/guides/concepts
 // Retrieve a token, saves the token, then returns the generated client.
 func getClient(config *oauth2.Config) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
