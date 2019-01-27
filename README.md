@@ -25,3 +25,9 @@ I hacked together a Google Sheet with my list of friends, the frequency I want t
 ## If you want to use it
 
 The implementation is terrible, but it works quite well for me at the moment. If you want to try it out feel free to contact me via email or create an issue.
+
+## crontab
+
+```
+0 * * * * export GOPATH=%your_gopath% && $GOPATH/bin/fsm
+```
