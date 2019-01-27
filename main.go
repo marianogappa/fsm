@@ -80,7 +80,6 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	// TODO get writeable token
 	config, err := google.ConfigFromJSON(b, "https://www.googleapis.com/auth/spreadsheets")
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
@@ -92,11 +91,9 @@ func main() {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	// Prints the names and majors of students in a sample spreadsheet:
-	// https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-	// spreadsheetId := "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms"
-	// readRange := "Class Data!A2:E"
+	// TODO: Note that sheet id is hardcoded
 	spreadsheetID := "1j5zrdUcqJWCTp9_05DmUTZk3PyBKVsTv36BO26Wv3SE"
+	// TODO: Note that sheet name (i.e. 2018) is hardcoded
 	readRange := "2018"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()
 	if err != nil {
@@ -108,7 +105,7 @@ func main() {
 	}
 
 	// Special case for head row: need the field names
-	// TODO: probably want to die if any of these are missing: ["name", "last_comm", "chat_link"]
+	// TODO: probably want to die if any of these are missing: ["name", "last_comm", "chat_link", "keep"]
 	fields := []string{}
 	fieldNameIndex := map[string]int{}
 	nameFieldIndex := -1
@@ -165,6 +162,7 @@ func main() {
 			// Ideally we'd want to abstract out this table functionality with a robust library. One day.
 			letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			// TODO: investigate why +2. +1 makes sense to me (title row)
+			// TODO: Note that sheet name (i.e. 2018) is hardcoded
 			cell := fmt.Sprintf("2018!%v%v", string(letters[fieldNameIndex["last_comm"]]), nameIndex[personsToTalkTo[i]["name"]]+2)
 			srv.Spreadsheets.Values.Update(
 				spreadsheetID,
