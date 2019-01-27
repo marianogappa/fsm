@@ -20,11 +20,11 @@ import (
 
 // Read this to understand how to use the Google Sheets API https://developers.google.com/sheets/api/guides/concepts
 // Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config) *http.Client {
+func getClient(config *oauth2.Config, dir string) *http.Client {
 	// The file token.json stores the user's access and refresh tokens, and is
 	// created automatically when the authorization flow completes for the first
 	// time.
-	tokFile := "token.json"
+	tokFile := fmt.Sprintf("%v/token.json", dir)
 	tok, err := tokenFromFile(tokFile)
 	if err != nil {
 		tok = getTokenFromWeb(config)
@@ -75,7 +75,18 @@ func saveToken(path string, token *oauth2.Token) {
 }
 
 func main() {
-	b, err := ioutil.ReadFile("credentials.json")
+	// TODO: Note that sheet id is hardcoded
+	spreadsheetID := "1j5zrdUcqJWCTp9_05DmUTZk3PyBKVsTv36BO26Wv3SE"
+	hardcodedPerson := ""
+	if len(os.Args) == 2 && os.Args[1] == "sheet" {
+		open(fmt.Sprintf("https://docs.google.com/spreadsheets/d/%v", spreadsheetID))
+		os.Exit(0)
+	}
+	if len(os.Args) == 3 && os.Args[1] == "chat" {
+		hardcodedPerson = os.Args[2]
+	}
+	dir := fmt.Sprintf("%v/src/github.com/marianogappa/fsm", os.Getenv("GOPATH"))
+	b, err := ioutil.ReadFile(fmt.Sprintf("%v/credentials.json", dir))
 	if err != nil {
 		log.Fatalf("Unable to read client secret file: %v", err)
 	}
@@ -85,15 +96,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-	client := getClient(config)
+	client := getClient(config, dir)
 
 	srv, err := sheets.New(client)
 	if err != nil {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	// TODO: Note that sheet id is hardcoded
-	spreadsheetID := "1j5zrdUcqJWCTp9_05DmUTZk3PyBKVsTv36BO26Wv3SE"
 	// TODO: Note that sheet name (i.e. 2018) is hardcoded
 	readRange := "2018"
 	resp, err := srv.Spreadsheets.Values.Get(spreadsheetID, readRange).Do()
@@ -136,18 +145,13 @@ func main() {
 
 	// Decide which people have a last comm documented older than desired comm frequency.
 	personsToTalkTo := []map[string]string{}
-	for _, person := range table {
-		lastComm, err := time.Parse("2006-01-02", person["last_comm"])
-		if err != nil {
-			lastComm, _ = time.Parse("2006-01-02", "1970-01-01")
+	if hardcodedPerson != "" {
+		if _, ok := nameIndex[hardcodedPerson]; !ok {
+			log.Fatalf("Couldn't find person %v\n", hardcodedPerson)
 		}
-		dayFrequency, err := strconv.Atoi(person["frequency"])
-		if err != nil || dayFrequency == 0 {
-			continue
-		}
-		if lastComm.Add(time.Duration(24*dayFrequency) * time.Hour).Before(time.Now()) {
-			personsToTalkTo = append(personsToTalkTo, person)
-		}
+		personsToTalkTo = append(personsToTalkTo, table[nameIndex[hardcodedPerson]])
+	} else {
+		personsToTalkTo = calculatePersonsToTalkTo(table)
 	}
 
 	// There might be more than one person to talk to. Choose one randomly.
@@ -175,6 +179,24 @@ func main() {
 			break
 		}
 	}
+}
+
+func calculatePersonsToTalkTo(table []map[string]string) []map[string]string {
+	personsToTalkTo := []map[string]string{}
+	for _, person := range table {
+		lastComm, err := time.Parse("2006-01-02", person["last_comm"])
+		if err != nil {
+			lastComm, _ = time.Parse("2006-01-02", "1970-01-01")
+		}
+		dayFrequency, err := strconv.Atoi(person["frequency"])
+		if err != nil || dayFrequency == 0 {
+			continue
+		}
+		if lastComm.Add(time.Duration(24*dayFrequency) * time.Hour).Before(time.Now()) {
+			personsToTalkTo = append(personsToTalkTo, person)
+		}
+	}
+	return personsToTalkTo
 }
 
 func open(url string) {
