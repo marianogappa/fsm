@@ -1,5 +1,5 @@
 # fsm
-Ridiculously hacky tool to help me keep in touch with my friends.
+Ridiculously hacky tool to help me keep in touch with my friends. `fsm` means "Friend Sheet Manager" btw.
 
 ## Problem
 
