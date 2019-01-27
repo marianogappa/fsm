@@ -7,7 +7,7 @@ Interacting with my friends makes me happy, but I have an inertial tendency to l
 
 ## Solution
 
-I hacked together a Google Sheet with my list of friends, the frequency I want to talk to them, and a chat link. Then I wrote this go script that reads the sheet, calculates if the frequencies are met or not, choses a random friend out of the matched ones and opens the chat link. There should be a cron on the system that runs every now and then, but one should also be able to run it manually.
+I hacked together a Google Sheet with my list of friends (like [this one](https://docs.google.com/spreadsheets/d/15a5P0xrPdOwuxhYpBqTfIqvhjz3DJKy8fyVa-1cykgE/edit#gid=0)), the frequency I want to talk to them, and a chat link. Then I wrote this go script that reads the sheet, calculates if the frequencies are met or not, choses a random friend out of the matched ones and opens the chat link. There should be a cron on the system that runs every now and then, but one should also be able to run it manually.
 
 ## Chat links look like
 
