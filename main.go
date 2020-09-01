@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"time"
 
@@ -143,6 +145,25 @@ func main() {
 		nameIndex[fmt.Sprintf("%v", row[nameFieldIndex])] = i
 	}
 
+	if os.Args[1] == "log" {
+		headN := math.MaxInt32
+		if len(os.Args) == 3 {
+			n, err := strconv.Atoi(os.Args[2])
+			if err == nil && n > 0 {
+				headN = n
+			}
+		}
+		chatLogs := sortNamesByLastComm(table)
+		for i := 0; i < headN && i < len(chatLogs); i++ {
+			oldenTimes, _ := time.Parse("2006-01-02", "1971-01-01")
+			if chatLogs[i].lastComm.Before(oldenTimes) {
+				break
+			}
+			fmt.Printf("%v %v\n", chatLogs[i].lastComm.Format("2006-01-02"), chatLogs[i].name)
+		}
+		os.Exit(0)
+	}
+
 	// Decide which people have a last comm documented older than desired comm frequency.
 	personsToTalkTo := []map[string]string{}
 	if hardcodedPerson != "" {
@@ -197,6 +218,24 @@ func calculatePersonsToTalkTo(table []map[string]string) []map[string]string {
 		}
 	}
 	return personsToTalkTo
+}
+
+type chatLog struct {
+	name     string
+	lastComm time.Time
+}
+
+func sortNamesByLastComm(table []map[string]string) []chatLog {
+	chatLogs := []chatLog{}
+	for _, person := range table {
+		lastComm, err := time.Parse("2006-01-02", person["last_comm"])
+		if err != nil {
+			lastComm, _ = time.Parse("2006-01-02", "1970-01-01")
+		}
+		chatLogs = append(chatLogs, chatLog{name: person["name"], lastComm: lastComm})
+	}
+	sort.Slice(chatLogs, func(i, j int) bool { return chatLogs[i].lastComm.After(chatLogs[j].lastComm) })
+	return chatLogs
 }
 
 func open(url string) {
