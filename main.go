@@ -145,7 +145,7 @@ func main() {
 		nameIndex[fmt.Sprintf("%v", row[nameFieldIndex])] = i
 	}
 
-	if os.Args[1] == "log" {
+	if len(os.Args) >= 2 && os.Args[1] == "log" {
 		headN := math.MaxInt32
 		if len(os.Args) == 3 {
 			n, err := strconv.Atoi(os.Args[2])
